@@ -1,11 +1,9 @@
 import socket
-import select
 SERVER_IP = ""
 PORT = 0
 
 
-class ChatClient(object):
-    """docstring for ClassName"""
+class ChatClient(object):  
     def __init__(self):
         self.sock = socket.socket()
         self.sock.connect((SERVER_IP, int(PORT)))
