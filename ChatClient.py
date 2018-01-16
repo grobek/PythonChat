@@ -64,9 +64,6 @@ class ChatClient(object):
     def check_name(self):
         self.sock.send("/name " + self.name)
         data = self.sock.recv(1024)
-        print str(data+"////////////////")
-        print str(data)
-        print str(data)
         if str(data) == 'ok':
             self.sock.send("something")
         return 'ok' in str(data)
