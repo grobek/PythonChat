@@ -38,6 +38,7 @@ class ChatServer(object):
                         client.send("this name is taken")
                         cname = client.recv(1024).split('/name ')[1]
                     client.send("ok")
+                    client.recv(1024)
                     print cname
                     # Compute client name and send back
                     client.send('CLIENT: ' + str(address[0]))
@@ -50,8 +51,8 @@ class ChatServer(object):
                     self.broadcast("Client (%s) connected" % msg)
                 # a message
                 else:
-                    data = str(self.server.recv(1024)).split()
-                    print data
+                    data = str(s.recv(1024)).split()
+                    print "\'" + data[1] + "\'" + " was sent to " + data[0]
                     if data[0] == 'broadcast':
                         data.remove(data[0])
                         self.broadcast(' '.join(data))
@@ -67,10 +68,12 @@ class ChatServer(object):
                         self.names[client] = None
                         client.close()
                         if not self.online:
-                            self.server.close()
-
+                            s.close()
+                    else: # if name not in self.names.value()
+                        print str(data[0]) + ' is offline'
+    
     def broadcast(self, msg):
-        ready_to_read, ready_to_write, in_error = select.select(self.online, [], [], 0)
+        ready_to_read, ready_to_write, in_error = select.select(self.online, [], [])
         for sock in ready_to_read:
             sock.send(msg)
 

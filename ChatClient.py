@@ -45,7 +45,7 @@ class ChatClient(object):
                         print "/send {user_dest} {data}. Send a message, {user_dest} can also be broadcast " \
                               "(send to everyone) if it is wished."
                         print "-----------------------"
-                    elif "/sendall in command[:8]":
+                    elif "/sendall" in command[:8]:
                         command = command.replace("/sendall", "")
                         self.sock.send("broadcast" + command)
                     elif "/send" in command[:5]:
@@ -63,9 +63,16 @@ class ChatClient(object):
 
     def check_name(self):
         self.sock.send("/name " + self.name)
-        return self.sock.recv(1024) == 'ok'
+        data = self.sock.recv(1024)
+        print str(data+"////////////////")
+        print str(data)
+        print str(data)
+        if str(data) == 'ok':
+            self.sock.send("something")
+        return 'ok' in str(data)
 
 
 if __name__ == '__main__':
-    me = ChatClient("John")
+    namee = raw_input()
+    me = ChatClient(namee)
     me.run()
