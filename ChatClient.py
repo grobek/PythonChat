@@ -43,14 +43,22 @@ class ChatClient(object):
                         print "/exit. Exit the chat"
                         print "/help. View this menu"
                         print "/send {user_dest} {data}. Send a message, {user_dest} can also be broadcast " \
-                              "(send to everyone) if it is wished."
+                              "/sendall {data}.(send to everyone) if it is wished."
+                        print "/getnames. prints all online memebers"
                         print "-----------------------"
+                        
                     elif "/sendall" in command[:8]:
                         command = command.replace("/sendall", "")
                         self.sock.send("broadcast" + command)
                     elif "/send" in command[:5]:
                         command = command.replace("/send", "")
                         self.sock.send(command)
+                    elif "/getnames" in command:
+                        self.sock.send("/getnames")
+                        rec = self.sock.recv(1024)
+                        if 'Client' in rec:
+                            rec = self.sock.recv(1024)
+                        print rec # print the names
                 elif i == self.sock:
                     data = self.sock.recv(1024)
                     if data:
