@@ -73,6 +73,6 @@ class ChatClient(object):
 
 
 if __name__ == '__main__':
-    namee = raw_input()
+    namee = raw_input("Please enter your name: ")
     me = ChatClient(namee)
     me.run()
