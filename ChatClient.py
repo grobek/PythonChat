@@ -1,7 +1,7 @@
 import socket
 import select
 import sys
-
+from comunication import Comunication as c
 
 class ChatClient(object):
     def __init__(self, name, host='127.0.0.1', port=9955):
@@ -19,7 +19,7 @@ class ChatClient(object):
             # Initial prompt
             self.prompt = '[' + '@'.join((name, socket.gethostname().split('.')[0])) + ']> '
             # Contains client address, set it
-            data = self.sock.recv(1024)
+            data = c.recieve(self.sock)
             addr = data.split('CLIENT: ')[1]
             self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
         except socket.error:
@@ -36,7 +36,8 @@ class ChatClient(object):
             for i in ready_to_read:
                 if i != self.sock:
                     print 'write what you want\n write /help for help'
-                    command = raw_input()
+                    lForKey = c.KeyListener(self.sock)
+                    command = lForKey.key_listener()
                     if "/help" in command[:5]:
                         print "A dot indicates the end of the syntax, {x} are neccesary arguements."
                         print "The commands available to you and their syntax:"
@@ -54,26 +55,26 @@ class ChatClient(object):
                         command = command.replace("/send", "")
                         self.sock.send(command)
                     elif "/getnames" in command:
-                        self.sock.send("/getnames")
-                        rec = self.sock.recv(1024)
+                        c.send("/getnames", self.sock)
+                        rec = c.recieve(self.sock)
                         if 'Client' in rec:
-                            rec = self.sock.recv(1024)
-                        print rec # print the names
+                            rec = c.recieve(self.sock)
+                        print rec  # print the names
                 elif i == self.sock:
-                    data = self.sock.recv(1024)
+                    data = c.recieve(self.sock)
                     if data:
                         print data + '   *'
         self.exit()
 
     def exit(self):
-        self.sock.send("bye")
+        c.send("bye", self.sock)
         self.sock.close()
 
     def check_name(self):
         self.sock.send("/name " + self.name)
-        data = self.sock.recv(1024)
+        data = c.recieve(self.sock)
         if str(data) == 'ok':
-            self.sock.send("something")
+            c.send("ofek", self.sock)
         return 'ok' in str(data)
 
 

@@ -1,5 +1,6 @@
 import socket
 import select
+from comunication import Comunication as c
 
 
 class ChatServer(object):
@@ -33,10 +34,10 @@ class ChatServer(object):
                     client, address = self.server.accept()
                     print 'chatserver: got connection %d from %s' % (client.fileno(), address)
                     # Read the login name
-                    cname = client.recv(1024).split('/name ')[1]
+                    cname = c.recieve(client).split('/name ')[1]
                     while cname in self.names.values():
-                        client.send("this name is taken")
-                        cname = client.recv(1024).split('/name ')[1]
+                        c.send("this name is taken", client)
+                        cname = c.recieve(client).split('/name ')[1]
                     client.send("ok")
                     client.recv(1024)
                     print cname
@@ -48,10 +49,10 @@ class ChatServer(object):
                     # Send joining information to other clients
                     msg = '\n(Connected: New client %s)' % (self.getname(client))
                     print "Client (%s, %s) connected" % address
-                    self.broadcast("Client (%s) connected" % msg)
+                    self.broadcast("Client (%s) connected" % msg, 'SERVER')
                 # a message
                 else:
-                    data = str(s.recv(1024)).split()
+                    data = str(c.recieve(s)).split()
                     if data[0] == '/getnames':
                         print str(self.names.values()) + "ABCEDFGHIJK"
                         s.send(str(self.names.values()))
@@ -59,7 +60,7 @@ class ChatServer(object):
                         print data
                         if data[0] == 'broadcast':
                             data.remove(data[0])
-                            self.broadcast(' '.join(data))
+                            self.broadcast(' '.join(data), self.getname(s))
                         elif data[0] in self.names.values():
                             for cl in self.names.keys():
                                 if self.names[cl] == data[0] and cl in self.online:
@@ -68,20 +69,18 @@ class ChatServer(object):
                                     break
                             cl.send(self.getname(cl) + ' is offline')
                         elif data[0] == 'bye':
-                            self.online.remove(client)
-                            self.broadcast(self.names[client] + " have disconnected")
-                            self.names[client] = None
-                            client.close()
-                            if not self.online:
-                                s.close()
+                            self.online.remove(s)
+                            self.broadcast(self.names[s] + " have disconnected", 'SERVER')
+                            del self.names[s]
+                            s.close()
                             
-                        else: # if name not in self.names.value()
+                        else:  # if name not in self.names.value()
                             print str(data[0]) + ' is offline'
     
-    def broadcast(self, msg):
-        ready_to_read, ready_to_write, in_error = select.select(self.online, [], [])
+    def broadcast(self, msg, name):
+        ready_to_read, ready_to_write, in_error = select.select([], self.online, [])
         for sock in ready_to_read:
-            sock.send(msg)
+            sock.send(name + ': ' + msg)
 
 if __name__ == "__main__":
     ChatServer().run()
