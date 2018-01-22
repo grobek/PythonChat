@@ -43,7 +43,8 @@ class Server:
                 for connection in self.connections:  # what to do with commands
                     if connection != c:
                         connection.send("User " + self.get_name(c) + " has disconnected")
-                print(str(self.get_name(c)[0]) , "disconnected")
+                print(str(self.get_name(c)) , "disconnected")
+                del self.names[c]
                 self.connections.remove(c)
                 c.close()
                 break
@@ -63,7 +64,6 @@ class Server:
                 continue
             c.send("Welcome.\n")
             self.names[c] = name
-
             cThread = threading.Thread(target=self.handler, args=(c, a))
             cThread.daemon = True
             cThread.start()
@@ -71,7 +71,7 @@ class Server:
             for connection in self.connections:  # what to do with commands
                 if connection != c:
                     connection.send("User " + self.get_name(c), "has connected")
-            print(str(a[0]) + ":" + str(a[1]), "connected")
+            print(str(self.get_name(c)), "disconnected")
 
 
 class Client:
