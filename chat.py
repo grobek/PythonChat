@@ -33,6 +33,7 @@ class Server:
                     self.to_someone(data, self.connections)
 
                 else:  # broadcast
+                    print "@" + self.get_name(c), "broadcasted:", data
                     for connection in self.connections:  # what to do with commands
                         if connection != c:
                             connection.send(data)
