@@ -9,17 +9,18 @@ class Server:
     names = {}
 
     def __init__(self):
-        self.sock.bind(("127.0.0.1", 9559))
+        self.sock.bind(("10.100.102.2", 9559))
         self.sock.listen(1)
 
-    def to_someone(self, data, connections):
+    def to_someone(self, data, connections, sock_source):
                 data = data.split(' ')
                 whoto = data[0]
                 whoto = whoto[1:]
-                data = ''.join(data[1:])
+                data = ' '.join(data[1:])
                 if whoto in self.names.values():
                     for sock in connections:
-                        sock.send(data)
+                        if self.get_name(sock) == whoto:
+                            sock.send("PM FROM @" + self.get_name(sock_source) + ": " + data)
                     print whoto, "exists"
                 else:
                     print "tried sending to", whoto, "he doesn't exist."
@@ -29,15 +30,19 @@ class Server:
         while True:
             data = str(c.recv(1024))
             if data:
-                if data[0] == '@':
-                    self.to_someone(data, self.connections)
-
+                if data == '@?':
+                    c.send("ONLINE: " + str(self.names.values()))
+                elif data[0] == '@':
+                    self.to_someone(data, self.connections, c)
                 else:  # broadcast
                     print "@" + self.get_name(c), "broadcasted:", data
                     for connection in self.connections:  # what to do with commands
                         if connection != c:
-                            connection.send(data)
+                            connection.send("BROADCAST FROM @" + self.get_name(c) + ": " + data)
             if not data:
+                for connection in self.connections:  # what to do with commands
+                    if connection != c:
+                        connection.send("User " + self.get_name(c) + " has disconnected")
                 print(str(self.get_name(c)[0]) , "disconnected")
                 self.connections.remove(c)
                 c.close()
@@ -63,6 +68,9 @@ class Server:
             cThread.daemon = True
             cThread.start()
             self.connections.append(c)
+            for connection in self.connections:  # what to do with commands
+                if connection != c:
+                    connection.send("User " + self.get_name(c), "has connected")
             print(str(a[0]) + ":" + str(a[1]), "connected")
 
 
@@ -82,9 +90,26 @@ class Client:
                 break
             print (data)
 
+    def help(self):
+        print "USES:"
+        print "[data] to broadcast"
+        print "@[someone] [data] to PM"
+        print "@? to get list of online users"
+        print "?? to print this manual"
+        print "!! to exit"
+
     def sendMsg(self):
+        self.help()
+        keep = True
         while True:  # get commands
-            self.sock.send(bytes(raw_input("")))
+            commands = raw_input("")
+            if commands == '??':
+                self.help()
+            elif commands == '!!':
+                self.sock.close()
+                sys.exit(0)
+            else:
+                self.sock.send(commands)
 
 
 if (len(sys.argv) > 1):
